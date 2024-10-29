@@ -1,4 +1,6 @@
-// User.js
+// File: User.js
+// class: User
+
 class User {
     constructor({
       email,
