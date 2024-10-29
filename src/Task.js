@@ -1,9 +1,14 @@
 // class task
 
 class Task{
-    constructor({data, duedate}){
+    constructor({data, duedate, done = false}){
         this.data = data;
         this.duedate = duedate;
+        this.done = done;
+    }
+
+    getstatus(){
+        return this.done;
     }
 
     getDueDate(){
