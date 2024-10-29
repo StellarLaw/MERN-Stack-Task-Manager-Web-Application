@@ -22,6 +22,10 @@ class Task{
     setStatus({bool}){
         this.done = bool;
     }
+
+    setDueDate({Date}){
+        this.duedate = Date;
+    }
 }
 
 
