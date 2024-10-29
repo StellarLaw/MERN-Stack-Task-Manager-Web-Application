@@ -18,6 +18,10 @@ class Task{
     getTask(){
         return this.data;
     }
+
+    setStatus({bool}){
+        this.done = bool;
+    }
 }
 
 
