@@ -13,8 +13,10 @@ import {
   Snackbar
 } from '@mui/material';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
+  const navigate = useNavigate();
   const [tabValue, setTabValue] = useState(0);
   const [loginData, setLoginData] = useState({
     email: '',
@@ -42,15 +44,29 @@ const HomePage = () => {
     e.preventDefault();
     try {
       const response = await axios.post('http://localhost:5001/api/auth/login', loginData);
-      // Store token in localStorage
+      
+      // Make sure the backend sends user data in this format
+      const userData = {
+        firstName: response.data.user.firstName,
+        lastName: response.data.user.lastName,
+        email: response.data.user.email,
+        id: response.data.user.id
+      };
+  
+      // Store token and user data
       localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(userData));
+      
       setAlert({
         open: true,
         message: 'Login successful!',
         severity: 'success'
       });
-      // TODO: Redirect to dashboard
-      console.log('Login successful:', response.data);
+  
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1500);
+  
     } catch (error) {
       setAlert({
         open: true,
