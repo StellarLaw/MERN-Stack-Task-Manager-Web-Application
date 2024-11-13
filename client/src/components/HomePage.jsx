@@ -72,7 +72,7 @@ const HomePage = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/signup', {
+      const response = await axios.post('http://localhost:5001/api/auth/signup', {
         firstName: signupData.firstName,
         lastName: signupData.lastName,
         email: signupData.email,
