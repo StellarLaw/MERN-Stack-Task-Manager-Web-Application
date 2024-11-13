@@ -41,7 +41,7 @@ const HomePage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', loginData);
+      const response = await axios.post('http://localhost:5001/api/auth/login', loginData);
       // Store token in localStorage
       localStorage.setItem('token', response.data.token);
       setAlert({
