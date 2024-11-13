@@ -8,8 +8,11 @@ import {
   Button,
   Tabs,
   Tab,
-  Container
+  Container,
+  Alert,
+  Snackbar
 } from '@mui/material';
+import axios from 'axios';
 
 const HomePage = () => {
   const [tabValue, setTabValue] = useState(0);
@@ -25,18 +28,74 @@ const HomePage = () => {
     confirmPassword: ''
   });
 
+  const [alert, setAlert] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    console.log('Login:', loginData);
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/login', loginData);
+      // Store token in localStorage
+      localStorage.setItem('token', response.data.token);
+      setAlert({
+        open: true,
+        message: 'Login successful!',
+        severity: 'success'
+      });
+      // TODO: Redirect to dashboard
+      console.log('Login successful:', response.data);
+    } catch (error) {
+      setAlert({
+        open: true,
+        message: error.response?.data?.message || 'Login failed',
+        severity: 'error'
+      });
+    }
   };
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
-    console.log('Signup:', signupData);
+    if (signupData.password !== signupData.confirmPassword) {
+      setAlert({
+        open: true,
+        message: 'Passwords do not match',
+        severity: 'error'
+      });
+      return;
+    }
+
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/signup', {
+        firstName: signupData.firstName,
+        lastName: signupData.lastName,
+        email: signupData.email,
+        password: signupData.password
+      });
+      setAlert({
+        open: true,
+        message: 'Signup successful! Please login.',
+        severity: 'success'
+      });
+      setTabValue(0); // Switch to login tab
+      console.log('Signup successful:', response.data);
+    } catch (error) {
+      setAlert({
+        open: true,
+        message: error.response?.data?.message || 'Signup failed',
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleCloseAlert = () => {
+    setAlert({ ...alert, open: false });
   };
 
   return (
@@ -154,6 +213,17 @@ const HomePage = () => {
           </CardContent>
         </Card>
       </Box>
+
+      <Snackbar
+        open={alert.open}
+        autoHideDuration={6000}
+        onClose={handleCloseAlert}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseAlert} severity={alert.severity} sx={{ width: '100%' }}>
+          {alert.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };
