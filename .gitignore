@@ -5,11 +5,9 @@ node_modules/
 /server/node_modules
 
 # Environment files
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Add .env back to .gitignore once we connect to Atlas database
+#.env
+
 
 # Build files
 /client/build
