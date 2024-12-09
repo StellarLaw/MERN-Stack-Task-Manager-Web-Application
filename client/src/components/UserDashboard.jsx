@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import axios from 'axios';
+import React, { useState, useEffect } from 'react';
 import {useNavigate} from "react-router-dom"
 import TaskCalendar from './TaskCalendar';
 import {
@@ -48,11 +49,7 @@ const UserDashboard = () => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
-  const [tasks, setTasks] = useState([
-    { id: 1, title: 'Complete Project Proposal', dueDate: '2024-12-01', status: 'In Progress', priority: 'high' },
-    { id: 2, title: 'Review Team Updates', dueDate: '2024-12-05', status: 'Pending', priority: 'medium' },
-    { id: 3, title: 'Client Meeting', dueDate: '2024-12-10', status: 'Upcoming', priority: 'low' }
-  ]);
+  const [tasks, setTasks] = useState([]);
   const [sortBy, setSortBy] = useState('dueDate');
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('user');
@@ -91,23 +88,67 @@ const UserDashboard = () => {
   const handleTaskSubmit = async (taskData) => {
     try {
       if (taskToEdit) {
-        // Editing existing task
+        // Update existing task
+        const response = await axios.put(
+          `http://localhost:5001/api/tasks/${taskToEdit._id}`, 
+          taskData,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          }
+        );
         setTasks(tasks.map(task => 
-          task.id === taskToEdit.id ? { ...task, ...taskData } : task
+          task._id === taskToEdit._id ? response.data : task
         ));
       } else {
-        // Creating new task
-        const newTask = {
-          id: tasks.length + 1,
-          ...taskData
-        };
-        setTasks([...tasks, newTask]);
+        // Create new task
+        const response = await axios.post(
+          'http://localhost:5001/api/tasks', 
+          taskData,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          }
+        );
+        setTasks([...tasks, response.data]);
       }
       setTaskToEdit(null);
+      setIsTaskFormOpen(false);
     } catch (error) {
       console.error('Error handling task:', error);
     }
   };
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        navigate('/');
+        return;
+    }
+
+    const fetchTasks = async () => {
+        try {
+            const response = await axios.get(
+                'http://localhost:5001/api/tasks',
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+            setTasks(response.data);
+        } catch (error) {
+            console.error('Error fetching tasks:', error);
+            if (error.response?.status === 401) {
+                navigate('/');
+            }
+        }
+    };
+
+    fetchTasks();
+}, [navigate]);
 
   const handleTaskClick = (taskId) => {
     setExpandedTask(expandedTask === taskId ? null : taskId);
@@ -134,10 +175,22 @@ const UserDashboard = () => {
     setIsTaskFormOpen(true);
   };
   
-  const handleDeleteTask = () => {
-    setTasks(tasks.filter(task => task.id !== taskToDelete));
-    setDeleteDialogOpen(false);
-    setTaskToDelete(null);
+  const handleDeleteTask = async () => {
+    try {
+      await axios.delete(
+        `http://localhost:5001/api/tasks/${taskToDelete}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      setTasks(tasks.filter(task => task._id !== taskToDelete));
+      setDeleteDialogOpen(false);
+      setTaskToDelete(null);
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    }
   };
 
   const sortedTasks = [...tasks].sort((a, b) => {
@@ -296,7 +349,7 @@ const UserDashboard = () => {
                                 <Typography component="span" variant="body2" 
                                   color={isOverdue(task.dueDate) && task.status !== 'completed' ? "error" : "textPrimary"}
                                 >
-                                  Due: {task.dueDate}
+                                  Due: {new Date(task.dueDate).toLocaleDateString()} {}
                                 </Typography>
                                 {` • Status: ${task.status}`}
                                 {` • Priority: `}
