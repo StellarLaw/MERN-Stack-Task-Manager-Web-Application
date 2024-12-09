@@ -157,7 +157,7 @@ const UserDashboard = () => {
   const handleTaskComplete = (taskId, e) => {
     e.stopPropagation();
     setTasks(tasks.map(task => 
-      task.id === taskId 
+      task._id === taskId._id 
         ? { ...task, status: task.status === 'completed' ? 'pending' : 'completed' }
         : task
     ));
@@ -304,7 +304,7 @@ const UserDashboard = () => {
               {viewMode === 'list' ? (
                 <List>
                   {sortedTasks.map((task) => (
-                  <React.Fragment key={task.id}>
+                  <React.Fragment key={task._id}>
                     <ListItem 
                       sx={{ 
                         flexDirection: 'column', 
@@ -319,12 +319,12 @@ const UserDashboard = () => {
                         alignItems: 'center' 
                       }}>
                         <Box 
-                          onClick={() => handleTaskClick(task.id)}
+                          onClick={() => handleTaskClick(task._id)}
                           sx={{ flex: 1, display: 'flex', alignItems: 'center' }}
                         >
                           <Checkbox
                             checked={task.status === 'completed'}
-                            onChange={(e) => handleTaskComplete(task.id, e)}
+                            onChange={(e) => handleTaskComplete(task, e)}
                             onClick={(e) => e.stopPropagation()}  // Add this line
                             sx={{ mr: 1 }}
                           />
@@ -366,8 +366,8 @@ const UserDashboard = () => {
                               </React.Fragment>
                             }
                           />
-                          <IconButton size="small" onClick={() => handleTaskClick(task.id)}>
-                            {expandedTask === task.id ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                          <IconButton size="small" onClick={() => handleTaskClick(task._id)}>
+                            {expandedTask === task._id ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                           </IconButton>
                         </Box>
                         <Box sx={{ display: 'flex', gap: 1 }}>
@@ -385,7 +385,7 @@ const UserDashboard = () => {
                           </IconButton>
                         </Box>
                       </Box>
-                      <Collapse in={expandedTask === task.id} timeout="auto" unmountOnExit sx={{ width: '100%', pl: 7 }}>
+                      <Collapse in={expandedTask === task._id} timeout="auto" unmountOnExit sx={{ width: '100%', pl: 7 }}>
                         <Box sx={{ py: 2 }}>
                           <Typography variant="body2" color="text.secondary" paragraph>
                             {task.description || 'No description provided.'}
