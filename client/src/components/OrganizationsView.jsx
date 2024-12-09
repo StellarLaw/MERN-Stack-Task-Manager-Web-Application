@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import {useNavigate} from "react-router-dom"
 import {
   Box,
   Container,
@@ -20,13 +21,19 @@ import {
   Tab,
   Divider,
   Alert,
-  Snackbar
+  Snackbar,
+  AppBar,
+  Toolbar,
+  Menu,
+  MenuItem
 } from '@mui/material';
 import {
   Add as AddIcon,
   Mail as InviteIcon,
   Check as AcceptIcon,
-  Close as RejectIcon
+  Close as RejectIcon,
+  AccountCircle,
+  ArrowBack as ArrowBackIcon
 } from '@mui/icons-material';
 import axios from 'axios';
 
@@ -44,6 +51,23 @@ const OrganizationsView = () => {
     message: '',
     severity: 'success'
   });
+const navigate = useNavigate();
+
+const [anchorEl, setAnchorEl] = useState(null);
+
+const handleMenu = (event) => {
+  setAnchorEl(event.currentTarget);
+};
+
+const handleClose = () => {
+  setAnchorEl(null);
+};
+
+const handleLogout = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  navigate('/');
+};
 
   const user = JSON.parse(localStorage.getItem('user'));
   const token = localStorage.getItem('token');
@@ -66,7 +90,7 @@ const OrganizationsView = () => {
 
   const fetchInvitations = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/api/invitations', {
+      const response = await axios.get('http://localhost:5001/api/organizations/invitations', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setInvitations(response.data);
@@ -95,7 +119,7 @@ const OrganizationsView = () => {
       await axios.post('http://localhost:5001/api/invitations',
         {
           organizationId: selectedOrg._id,
-          invitedEmail: inviteEmail
+          email: inviteEmail
         },
         { headers: { Authorization: `Bearer ${token}` }}
       );
@@ -109,7 +133,7 @@ const OrganizationsView = () => {
 
   const handleInvitationResponse = async (invitationId, status) => {
     try {
-      await axios.put(`http://localhost:5001/api/invitations/${invitationId}`,
+      await axios.put(`http://localhost:5001/api/organizations/invitations/${invitationId}`,
         { status },
         { headers: { Authorization: `Bearer ${token}` }}
       );
@@ -130,6 +154,41 @@ const OrganizationsView = () => {
   };
 
   return (
+    <Box sx={{ flexGrow: 1 }}>
+    <AppBar position="static">
+      <Toolbar>
+        <IconButton
+          size="large"
+          edge="start"
+          color="inherit"
+          sx={{ mr: 2 }}
+          onClick={() => navigate('/dashboard')}
+        >
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          Organizations
+        </Typography>
+        <div>
+          <IconButton
+            size="large"
+            onClick={handleMenu}
+            color="inherit"
+          >
+            <AccountCircle />
+          </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+          >
+            <MenuItem onClick={handleClose}>Profile</MenuItem>
+            <MenuItem onClick={handleClose}>Settings</MenuItem>
+            <MenuItem onClick={handleLogout}>Logout</MenuItem>
+          </Menu>
+        </div>
+      </Toolbar>
+    </AppBar>
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Box sx={{ width: '100%' }}>
         <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
@@ -152,31 +211,36 @@ const OrganizationsView = () => {
             </Box>
             
             <List>
-              {organizations.map((org) => (
-                <Card key={org._id} sx={{ mb: 2 }}>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant="h6">{org.name}</Typography>
-                      {org.owner === user.id && (
-                        <Button
-                          variant="outlined"
-                          startIcon={<InviteIcon />}
-                          onClick={() => {
-                            setSelectedOrg(org);
-                            setInviteDialogOpen(true);
-                          }}
-                        >
-                          Invite User
-                        </Button>
-                      )}
-                    </Box>
-                    <Typography color="textSecondary">
-                      {org.owner === user.id ? 'Admin' : 'Member'}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              ))}
+            {organizations.map((org) => (
+              <Card key={org._id} sx={{ mb: 2 }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h6">{org.name}</Typography>
+                    {org.owner._id === user.id && (  // Changed from org.owner to org.owner._id
+                      <Button
+                        variant="outlined"
+                        startIcon={<InviteIcon />}
+                        onClick={() => {
+                          setSelectedOrg(org);
+                          setInviteDialogOpen(true);
+                        }}
+                      >
+                        Invite User
+                      </Button>
+                    )}
+                  </Box>
+                  <Typography color="textSecondary">
+                    {org.owner._id === user.id ? 'Admin' : 'Member'}
+                  </Typography>
+                </CardContent>
+              </Card>
+            ))}
             </List>
+            {organizations.length === 0 && (
+              <Typography color="textSecondary" sx={{ mt: 2 }}>
+                You are not a member of any organizations yet.
+              </Typography>
+            )}
           </Box>
         )}
 
@@ -185,36 +249,36 @@ const OrganizationsView = () => {
           <Box sx={{ mt: 3 }}>
             <Typography variant="h6" gutterBottom>Pending Invitations</Typography>
             <List>
-              {invitations.map((invitation) => (
-                <Card key={invitation._id} sx={{ mb: 2 }}>
-                  <CardContent>
-                    <Typography variant="subtitle1">
-                      {invitation.organizationId.name}
-                    </Typography>
-                    <Typography color="textSecondary" gutterBottom>
-                      Invited by: {invitation.invitedBy.email}
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={<AcceptIcon />}
-                        onClick={() => handleInvitationResponse(invitation._id, 'accepted')}
-                      >
-                        Accept
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        startIcon={<RejectIcon />}
-                        onClick={() => handleInvitationResponse(invitation._id, 'rejected')}
-                      >
-                        Reject
-                      </Button>
-                    </Box>
-                  </CardContent>
-                </Card>
-              ))}
+            {invitations.map((invitation) => (
+              <Card key={invitation._id} sx={{ mb: 2 }}>
+                <CardContent>
+                  <Typography variant="subtitle1">
+                    {invitation.organization.name}  // Changed from organizationId to organization
+                  </Typography>
+                  <Typography color="textSecondary" gutterBottom>
+                    Invited by: {invitation.from.email}  // Changed from invitedBy to from
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      startIcon={<AcceptIcon />}
+                      onClick={() => handleInvitationResponse(invitation._id, 'accepted')}
+                    >
+                      Accept
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      startIcon={<RejectIcon />}
+                      onClick={() => handleInvitationResponse(invitation._id, 'rejected')}
+                    >
+                      Reject
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            ))}
               {invitations.length === 0 && (
                 <Typography color="textSecondary">No pending invitations</Typography>
               )}
@@ -273,6 +337,7 @@ const OrganizationsView = () => {
         </Alert>
       </Snackbar>
     </Container>
+    </Box>
   );
 };
 

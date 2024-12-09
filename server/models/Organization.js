@@ -6,17 +6,30 @@ const organizationSchema = new mongoose.Schema({
     required: [true, 'Organization name is required'],
     trim: true
   },
-  users: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
+  description: {
+    type: String,
+    trim: true
+  },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
+  },
+  members: [{
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    role: {
+      type: String,
+      enum: ['admin', 'member'],
+      default: 'member'
+    }
+  }],
+  createdAt: {
+    type: Date,
+    default: Date.now
   }
-}, {
-  timestamps: true
 });
 
 const Organization = mongoose.model('Organization', organizationSchema);

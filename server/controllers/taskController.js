@@ -58,7 +58,7 @@ exports.deleteTask = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to delete this task' });
     }
 
-    await task.remove();
+    await Task.findByIdAndDelete(req.params.id);
     res.json({ message: 'Task deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });

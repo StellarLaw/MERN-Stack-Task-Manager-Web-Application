@@ -163,9 +163,9 @@ const UserDashboard = () => {
     ));
   };
   
-  const openDeleteDialog = (taskId, e) => {
+  const openDeleteDialog = (task, e) => {
     e.stopPropagation();
-    setTaskToDelete(taskId);
+    setTaskToDelete(task);
     setDeleteDialogOpen(true);
   };
 
@@ -178,14 +178,14 @@ const UserDashboard = () => {
   const handleDeleteTask = async () => {
     try {
       await axios.delete(
-        `http://localhost:5001/api/tasks/${taskToDelete}`,
+        `http://localhost:5001/api/tasks/${taskToDelete._id}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
         }
       );
-      setTasks(tasks.filter(task => task._id !== taskToDelete));
+      setTasks(tasks.filter(task => task._id !== taskToDelete._id));
       setDeleteDialogOpen(false);
       setTaskToDelete(null);
     } catch (error) {
@@ -377,12 +377,12 @@ const UserDashboard = () => {
                         >
                           <EditIcon fontSize="small" />
                         </IconButton>
-                          <IconButton 
-                            size="small"
-                            onClick={(e) => openDeleteDialog(task.id, e)}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
+                        <IconButton 
+                          size="small"
+                          onClick={(e) => openDeleteDialog(task, e)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
                         </Box>
                       </Box>
                       <Collapse in={expandedTask === task._id} timeout="auto" unmountOnExit sx={{ width: '100%', pl: 7 }}>
