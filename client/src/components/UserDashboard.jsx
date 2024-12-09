@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import {useNavigate} from "react-router-dom"
+import TaskCalendar from './TaskCalendar';
 import {
   Box,
   Container,
@@ -38,10 +40,12 @@ import {
   Delete as DeleteIcon,
   KeyboardArrowDown as ExpandMoreIcon,
   KeyboardArrowUp as ExpandLessIcon,
+  Business as OrgIcon
 } from '@mui/icons-material';
 import TaskForm from './TaskForm';
 
 const UserDashboard = () => {
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [tasks, setTasks] = useState([
@@ -61,6 +65,8 @@ const UserDashboard = () => {
   const [taskToDelete, setTaskToDelete] = useState(null);
 
   const [taskToEdit, setTaskToEdit] = useState(null);
+
+  const [viewMode, setViewMode] = useState('list');
 
   const isOverdue = (dueDate) => {
     const today = new Date();
@@ -195,32 +201,56 @@ const UserDashboard = () => {
           </Grid>
 
           <Grid item xs={12} md={8}>
-            <Card>
-              <CardContent>
-                <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <FormControl size="small" sx={{ minWidth: 200 }}>
-                    <InputLabel>Sort By</InputLabel>
-                    <Select
-                      value={sortBy}
-                      label="Sort By"
-                      onChange={(e) => setSortBy(e.target.value)}
-                    >
-                      <MenuItem value="dueDate">Due Date</MenuItem>
-                      <MenuItem value="priority">Priority (High to Low)</MenuItem>
-                      <MenuItem value="status">Status</MenuItem>
-                      <MenuItem value="createdAt">Created Date</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <Button 
-                    variant="contained" 
-                    color="primary"
-                    onClick={() => setIsTaskFormOpen(true)}
+          <Card>
+            <CardContent>
+              <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                  {/* View toggle buttons */}
+                  <Button
+                    variant={viewMode === 'list' ? 'contained' : 'outlined'}
+                    onClick={() => setViewMode('list')}
+                    size="small"
                   >
-                    New Task
+                    List View
                   </Button>
+                  <Button
+                    variant={viewMode === 'calendar' ? 'contained' : 'outlined'}
+                    onClick={() => setViewMode('calendar')}
+                    size="small"
+                  >
+                    Calendar View
+                  </Button>
+
+                  {/* Sort control (only show in list view) */}
+                  {viewMode === 'list' && (
+                    <FormControl size="small" sx={{ minWidth: 200 }}>
+                      <InputLabel>Sort By</InputLabel>
+                      <Select
+                        value={sortBy}
+                        label="Sort By"
+                        onChange={(e) => setSortBy(e.target.value)}
+                      >
+                        <MenuItem value="dueDate">Due Date</MenuItem>
+                        <MenuItem value="priority">Priority (High to Low)</MenuItem>
+                        <MenuItem value="status">Status</MenuItem>
+                        <MenuItem value="createdAt">Created Date</MenuItem>
+                      </Select>
+                    </FormControl>
+                  )}
                 </Box>
+                <Button 
+                  variant="contained" 
+                  color="primary"
+                  onClick={() => setIsTaskFormOpen(true)}
+                >
+                  New Task
+                </Button>
+              </Box>
+
+              {/* Conditional rendering based on view mode */}
+              {viewMode === 'list' ? (
                 <List>
-                {sortedTasks.map((task) => (
+                  {sortedTasks.map((task) => (
                   <React.Fragment key={task.id}>
                     <ListItem 
                       sx={{ 
@@ -314,9 +344,12 @@ const UserDashboard = () => {
                   </React.Fragment>
                 ))}
                 </List>
-              </CardContent>
-            </Card>
-          </Grid>
+              ) : (
+                <TaskCalendar tasks={sortedTasks} />
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
 
           <Grid item xs={12} md={4}>
             <Card>
@@ -332,6 +365,15 @@ const UserDashboard = () => {
                   onClick={() => setIsTaskFormOpen(true)}
                 >
                   Create New Task
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<OrgIcon />}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                  onClick={() => navigate("/organizations")}
+                >
+                  Organizations
                 </Button>
                 <Button
                   variant="contained"
