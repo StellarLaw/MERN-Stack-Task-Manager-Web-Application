@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {useNavigate} from "react-router-dom"
+import OrganizationDetailsDialog from './OrganizationDetailsDialog';
 import {
   Box,
   Container,
@@ -46,6 +47,7 @@ const OrganizationsView = () => {
   const [newOrgName, setNewOrgName] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
   const [selectedOrg, setSelectedOrg] = useState(null);
+  const [selectedOrgForDetails, setSelectedOrgForDetails] = useState(null);
   const [alert, setAlert] = useState({
     open: false,
     message: '',
@@ -114,23 +116,21 @@ const handleLogout = () => {
     }
   };
 
-  const handleInviteUser = async () => {
+  const handleInviteUser = async ({ organizationId, email }) => {  // Update parameters
     try {
-      const response = await axios.post(
+      await axios.post(
         'http://localhost:5001/api/organizations/invitations',
         {
-          organizationId: selectedOrg._id,
-          email: inviteEmail
+          organizationId,
+          email
         },
         { 
           headers: { 
-            Authorization: `Bearer ${localStorage.getItem('token')} `
+            Authorization: `Bearer ${localStorage.getItem('token')}` 
           }
         }
       );
       
-      setInviteDialogOpen(false);
-      setInviteEmail('');
       showAlert('Invitation sent successfully', 'success');
     } catch (error) {
       showAlert(error.response?.data?.message || 'Failed to send invitation', 'error');
@@ -218,28 +218,20 @@ const handleLogout = () => {
             
             <List>
             {organizations.map((org) => (
-              <Card key={org._id} sx={{ mb: 2 }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="h6">{org.name}</Typography>
-                    {org.owner._id === user.id && (  // Changed from org.owner to org.owner._id
-                      <Button
-                        variant="outlined"
-                        startIcon={<InviteIcon />}
-                        onClick={() => {
-                          setSelectedOrg(org);
-                          setInviteDialogOpen(true);
-                        }}
-                      >
-                        Invite User
-                      </Button>
-                    )}
-                  </Box>
-                  <Typography color="textSecondary">
-                    {org.owner._id === user.id ? 'Admin' : 'Member'}
-                  </Typography>
-                </CardContent>
-              </Card>
+              <Card 
+              key={org._id} 
+              sx={{ mb: 2, cursor: 'pointer' }}
+              onClick={() => setSelectedOrgForDetails(org)}
+            >
+              <CardContent>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="h6">{org.name}</Typography>
+                </Box>
+                <Typography color="textSecondary">
+                  {org.owner._id === user.id ? 'Admin' : 'Member'}
+                </Typography>
+              </CardContent>
+            </Card>
             ))}
             </List>
             {organizations.length === 0 && (
@@ -343,6 +335,14 @@ const handleLogout = () => {
         </Alert>
       </Snackbar>
     </Container>
+
+    <OrganizationDetailsDialog
+      open={selectedOrgForDetails !== null}
+      onClose={() => setSelectedOrgForDetails(null)}
+      organization={selectedOrgForDetails}
+      onInvite={handleInviteUser}
+      isAdmin={selectedOrgForDetails?.owner._id === user.id}
+    />
     </Box>
   );
 };

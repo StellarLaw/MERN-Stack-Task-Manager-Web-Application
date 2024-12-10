@@ -22,7 +22,9 @@ exports.getUserOrganizations = async (req, res) => {
   try {
     const organizations = await Organization.find({
       'members.user': req.user._id
-    }).populate('owner', 'firstName lastName email');
+    })
+    .populate('owner', 'firstName lastName email')
+    .populate('members.user', 'firstName lastName email');  // Add this line
 
     res.json(organizations);
   } catch (error) {
