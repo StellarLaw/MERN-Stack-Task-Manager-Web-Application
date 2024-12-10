@@ -35,22 +35,37 @@ exports.sendInvitation = async (req, res) => {
   try {
     const { organizationId, email } = req.body;
 
-    // Check if user is admin of the organization
-    const organization = await Organization.findOne({
-      _id: organizationId,
-      'members': { 
-        $elemMatch: { 
-          user: req.user._id, 
-          role: 'admin' 
-        }
-      }
-    });
-
+    // Check if organization exists
+    const organization = await Organization.findById(organizationId);
     if (!organization) {
+      return res.status(404).json({ message: 'Organization not found' });
+    }
+
+    // Check if user is admin
+    const isAdmin = organization.members.some(
+      member => member.user.toString() === req.user._id.toString() && member.role === 'admin'
+    );
+
+    if (!isAdmin) {
       return res.status(403).json({ message: 'Not authorized to send invitations' });
     }
 
-    // Check if invitation already exists
+    // Check if invited user exists
+    const invitedUser = await User.findOne({ email });
+    if (!invitedUser) {
+      return res.status(404).json({ message: 'User with this email not found' });
+    }
+
+    // Check if user is already a member
+    const isMember = organization.members.some(
+      member => member.user.toString() === invitedUser._id.toString()
+    );
+
+    if (isMember) {
+      return res.status(400).json({ message: 'User is already a member of this organization' });
+    }
+
+    // Check for existing invitation
     const existingInvitation = await Invitation.findOne({
       organization: organizationId,
       to: email,
@@ -58,9 +73,10 @@ exports.sendInvitation = async (req, res) => {
     });
 
     if (existingInvitation) {
-      return res.status(400).json({ message: 'Invitation already sent' });
+      return res.status(400).json({ message: 'Invitation already sent to this user' });
     }
 
+    // Create invitation
     const invitation = await Invitation.create({
       organization: organizationId,
       from: req.user._id,
@@ -69,7 +85,7 @@ exports.sendInvitation = async (req, res) => {
 
     res.status(201).json(invitation);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 

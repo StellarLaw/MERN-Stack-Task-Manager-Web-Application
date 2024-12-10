@@ -116,18 +116,24 @@ const handleLogout = () => {
 
   const handleInviteUser = async () => {
     try {
-      await axios.post('http://localhost:5001/api/invitations',
+      const response = await axios.post(
+        'http://localhost:5001/api/organizations/invitations',
         {
           organizationId: selectedOrg._id,
           email: inviteEmail
         },
-        { headers: { Authorization: `Bearer ${token}` }}
+        { 
+          headers: { 
+            Authorization: `Bearer ${localStorage.getItem('token')} `
+          }
+        }
       );
+      
       setInviteDialogOpen(false);
       setInviteEmail('');
       showAlert('Invitation sent successfully', 'success');
     } catch (error) {
-      showAlert('Failed to send invitation', 'error');
+      showAlert(error.response?.data?.message || 'Failed to send invitation', 'error');
     }
   };
 
