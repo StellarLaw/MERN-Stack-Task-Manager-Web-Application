@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const organizationRoutes = require('./routes/organizationRoutes');
+const teamRoutes = require('./routes/teamRoutes');
 
 dotenv.config();
 const app = express();
@@ -22,6 +23,7 @@ mongoose.connect(process.env.MONGODB_URI)
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/organizations', organizationRoutes);
+app.use('/api/teams', teamRoutes);
 
 // Test route
 app.get('/test', (req, res) => {

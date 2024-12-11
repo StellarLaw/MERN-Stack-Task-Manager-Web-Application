@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import TeamDetailsDialog from './TeamDetailsDialog';
 import {
   Dialog,
   DialogTitle,
@@ -22,6 +23,7 @@ import {
   Mail as InviteIcon,
   PersonAdd as AddMemberIcon,
 } from '@mui/icons-material';
+import axios from 'axios';
 
 const OrganizationDetailsDialog = ({ 
   open, 
@@ -35,11 +37,29 @@ const OrganizationDetailsDialog = ({
   const [newTeamName, setNewTeamName] = useState('');
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [teams, setTeams] = useState([]);
+  const [selectedTeam, setSelectedTeam] = useState(null);
+  const [teamDetailsOpen, setTeamDetailsOpen] = useState(false);
 
-  const handleCreateTeam = () => {
-    // Add team creation logic here
-    setCreateTeamDialogOpen(false);
-    setNewTeamName('');
+  const handleCreateTeam = async () => {
+    try {
+      await axios.post(
+        'http://localhost:5001/api/teams',
+        {
+          name: newTeamName,
+          organizationId: organization._id
+        },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }
+      );
+      
+      setCreateTeamDialogOpen(false);
+      setNewTeamName('');
+      fetchTeams(); // Refresh teams list
+    } catch (error) {
+      console.error('Error creating team:', error);
+    }
   };
 
   const handleInviteMember = () => {
@@ -49,6 +69,26 @@ const OrganizationDetailsDialog = ({
       });
     setInviteDialogOpen(false);
     setInviteEmail('');
+  };
+
+  useEffect(() => {
+    if (organization) {
+      fetchTeams();
+    }
+  }, [organization]);
+  
+  const fetchTeams = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5001/api/teams/organization/${organization._id}`,
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }
+      );
+      setTeams(response.data);
+    } catch (error) {
+      console.error('Error fetching teams:', error);
+    }
   };
 
   return (
@@ -74,13 +114,28 @@ const OrganizationDetailsDialog = ({
               </Button>
             )}
             <List>
-              {/* Add team list here */}
-              <ListItem>
+            {teams.length > 0 ? (
+                teams.map((team) => (
+                <ListItem key={team._id}
+                    button
+                    onClick={() => {
+                        setSelectedTeam(team);
+                        setTeamDetailsOpen(true);
+                    }}>
+                    <ListItemText 
+                    primary={team.name}
+                    secondary={`Created by: ${team.createdBy.firstName} ${team.createdBy.lastName}`}
+                    />
+                </ListItem>
+                ))
+            ) : (
+                <ListItem>
                 <ListItemText 
-                  primary="No teams yet"
-                  secondary="Create a team to get started"
+                    primary="No teams yet"
+                    secondary="Create a team to get started"
                 />
-              </ListItem>
+                </ListItem>
+            )}
             </List>
           </Box>
         )}
@@ -156,6 +211,14 @@ const OrganizationDetailsDialog = ({
           <Button onClick={handleInviteMember} variant="contained">Send Invitation</Button>
         </DialogActions>
       </Dialog>
+
+      <TeamDetailsDialog
+        open={teamDetailsOpen}
+        onClose={() => setTeamDetailsOpen(false)}
+        team={selectedTeam}
+        organization={organization}
+        isAdmin={isAdmin}
+        />
     </Dialog>
   );
 };
