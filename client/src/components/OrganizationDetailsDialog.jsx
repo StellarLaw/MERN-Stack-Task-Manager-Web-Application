@@ -13,6 +13,7 @@ import {
   ListItemText,
   IconButton,
   TextField,
+  Typography,
   Dialog as SubDialog,
   DialogActions,
   DialogContent as SubDialogContent,
@@ -40,6 +41,9 @@ const OrganizationDetailsDialog = ({
   const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [teamDetailsOpen, setTeamDetailsOpen] = useState(false);
+  const [manageTeamsDialogOpen, setManageTeamsDialogOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [selectedTeamDetails, setSelectedTeamDetails] = useState(null);
 
   const handleCreateTeam = async () => {
     try {
@@ -91,6 +95,66 @@ const OrganizationDetailsDialog = ({
     }
   };
 
+  const handleManageTeams = (member) => {
+    setSelectedMember(member);
+    setManageTeamsDialogOpen(true);
+  };
+
+  const handleTeamAssignment = async (teamId, userId) => {
+    try {
+      const team = teams.find(t => t._id === teamId);
+      // Check if member exists in the team
+      const isCurrentMember = team.members.some(member => 
+        member._id === userId || member === userId
+      );
+      
+      const endpoint = isCurrentMember ? 'remove' : 'add';
+      
+      await axios.put(
+        `http://localhost:5001/api/teams/${teamId}/members/${endpoint}`,
+        { memberId: userId },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }
+      );
+  
+      // Refresh teams data
+      fetchTeams();
+  
+    } catch (error) {
+      console.error('Error updating team members:', error);
+    }
+  };
+  
+  const handleDeleteTeam = async (teamId) => {
+    try {
+      await axios.delete(
+        `http://localhost:5001/api/teams/${teamId}`,
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }
+      );
+      setTeams(teams.filter(t => t._id !== teamId));
+    } catch (error) {
+      console.error('Error deleting team:', error);
+    }
+  };
+  
+  const handleRemoveMember = async (userId) => {
+    try {
+      await axios.delete(
+        `http://localhost:5001/api/organizations/${organization._id}/members/${userId}`,
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }
+      );
+      // Refresh organization data
+      // This should be handled by your parent component
+    } catch (error) {
+      console.error('Error removing member:', error);
+    }
+  };
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>{organization?.name}</DialogTitle>
@@ -115,26 +179,35 @@ const OrganizationDetailsDialog = ({
             )}
             <List>
             {teams.length > 0 ? (
-                teams.map((team) => (
-                <ListItem key={team._id}
-                    button
-                    onClick={() => {
-                        setSelectedTeam(team);
-                        setTeamDetailsOpen(true);
-                    }}>
-                    <ListItemText 
-                    primary={team.name}
-                    secondary={`Created by: ${team.createdBy.firstName} ${team.createdBy.lastName}`}
-                    />
+            teams.map((team) => (
+                <ListItem 
+                key={team._id}
+                button
+                onClick={() => setSelectedTeamDetails(team)}
+                secondaryAction={
+                    isAdmin && (
+                    <Button
+                        color="error"
+                        onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteTeam(team._id);
+                        }}
+                    >
+                        Delete
+                    </Button>
+                    )
+                }
+                >
+                <ListItemText primary={team.name} />
                 </ListItem>
-                ))
+            ))
             ) : (
-                <ListItem>
+            <ListItem>
                 <ListItemText 
-                    primary="No teams yet"
-                    secondary="Create a team to get started"
+                primary="No teams yet"
+                secondary="Create a team to get started"
                 />
-                </ListItem>
+            </ListItem>
             )}
             </List>
           </Box>
@@ -142,28 +215,54 @@ const OrganizationDetailsDialog = ({
 
         {/* Members Tab */}
         {tabValue === 1 && (
-          <Box sx={{ mt: 2 }}>
+        <Box sx={{ mt: 2 }}>
             {isAdmin && (
-              <Button
+            <Button
                 variant="contained"
                 startIcon={<AddMemberIcon />}
                 onClick={() => setInviteDialogOpen(true)}
                 sx={{ mb: 2 }}
-              >
+            >
                 Invite Member
-              </Button>
+            </Button>
             )}
             <List>
-              {organization?.members?.map((member) => (
-                <ListItem key={member.user._id}>
-                  <ListItemText
+            {organization?.members?.map((member) => (
+                <ListItem
+                key={member.user._id}
+                secondaryAction={
+                    isAdmin && member.user._id !== organization.owner && (
+                    <Button
+                        color="error"
+                        onClick={() => handleRemoveMember(member.user._id)}
+                    >
+                        Remove
+                    </Button>
+                    )
+                }
+                >
+                <ListItemText
                     primary={`${member.user.firstName} ${member.user.lastName}`}
-                    secondary={`Role: ${member.role}`}
-                  />
+                    secondary={
+                    <React.Fragment>
+                        <Typography component="span" variant="body2">
+                        Role: {member.role}
+                        </Typography>
+                        <br />
+                        <Button
+                        size="small"
+                        onClick={() => handleManageTeams(member.user)}
+                        sx={{ display: isAdmin ? 'inline-flex' : 'none' }}
+                        >
+                        Manage Teams
+                        </Button>
+                    </React.Fragment>
+                    }
+                />
                 </ListItem>
-              ))}
+            ))}
             </List>
-          </Box>
+        </Box>
         )}
       </DialogContent>
 
@@ -219,6 +318,90 @@ const OrganizationDetailsDialog = ({
         organization={organization}
         isAdmin={isAdmin}
         />
+
+        <Dialog
+        open={manageTeamsDialogOpen}
+        onClose={() => {
+            setManageTeamsDialogOpen(false);
+            setSelectedMember(null);
+        }}
+        >
+        <DialogTitle>
+            Manage Teams for {selectedMember?.firstName} {selectedMember?.lastName}
+        </DialogTitle>
+        <DialogContent>
+            <List>
+            {teams.map((team) => (
+                <ListItem key={team._id}>
+                <ListItemText primary={team.name} />
+                {isAdmin && (  // Only show action buttons for admins
+            <>
+              <Button
+                variant={team.members.some(member => 
+                    member._id === selectedMember?._id || 
+                    member === selectedMember?._id
+                ) ? "contained" : "outlined"}
+                onClick={() => handleTeamAssignment(team._id, selectedMember?._id)}
+                >
+                {team.members.some(member => 
+                    member._id === selectedMember?._id || 
+                    member === selectedMember?._id
+                ) ? "Remove" : "Add"}
+              </Button>
+              <Button
+                color="error"
+                onClick={() => handleDeleteTeam(team._id)}
+                sx={{ ml: 1 }}
+              >
+                Delete Team
+              </Button>
+            </>
+          )}
+                </ListItem>
+            ))}
+            </List>
+        </DialogContent>
+        </Dialog>
+
+        {/* Team Details Dialog */}
+        <Dialog
+        open={Boolean(selectedTeamDetails)}
+        onClose={() => setSelectedTeamDetails(null)}
+        maxWidth="sm"
+        fullWidth
+        >
+        <DialogTitle>{selectedTeamDetails?.name}</DialogTitle>
+        <DialogContent>
+            <Box sx={{ mb: 3 }}>
+            <Typography variant="h6" gutterBottom>Supervisor</Typography>
+            <Typography>
+                {selectedTeamDetails?.supervisor ? 
+                `${selectedTeamDetails.supervisor.firstName} ${selectedTeamDetails.supervisor.lastName}` : 
+                'No supervisor assigned'
+                }
+            </Typography>
+            </Box>
+
+            <Box>
+            <Typography variant="h6" gutterBottom>Team Members</Typography>
+            <List>
+                {selectedTeamDetails?.members?.length > 0 ? (
+                selectedTeamDetails.members.map((member) => (
+                    <ListItem key={member._id}>
+                    <ListItemText 
+                        primary={`${member.firstName} ${member.lastName}`}
+                    />
+                    </ListItem>
+                ))
+                ) : (
+                <ListItem>
+                    <ListItemText primary="No members in this team" />
+                </ListItem>
+                )}
+            </List>
+            </Box>
+        </DialogContent>
+        </Dialog>
     </Dialog>
   );
 };

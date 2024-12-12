@@ -36,17 +36,17 @@ exports.createTeam = async (req, res) => {
 
 // Get organization teams
 exports.getOrganizationTeams = async (req, res) => {
-  try {
-    const teams = await Team.find({ organization: req.params.organizationId })
-      .populate('supervisor', 'firstName lastName')
-      .populate('members', 'firstName lastName')
-      .populate('createdBy', 'firstName lastName');
-
-    res.json(teams);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+    try {
+      const teams = await Team.find({ organization: req.params.organizationId })
+        .populate('supervisor', 'firstName lastName')
+        .populate('members', 'firstName lastName')
+        .populate('createdBy', 'firstName lastName');
+  
+      res.json(teams);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  };
 
 // Add supervisor to team
 exports.updateSupervisor = async (req, res) => {
@@ -70,7 +70,10 @@ exports.updateSupervisor = async (req, res) => {
         req.params.teamId,
         { $addToSet: { members: req.body.memberId } },
         { new: true }
-      );
+      )
+      .populate('members', 'firstName lastName email')
+      .populate('supervisor', 'firstName lastName email');
+  
       res.json(team);
     } catch (error) {
       res.status(400).json({ message: error.message });
@@ -86,6 +89,16 @@ exports.updateSupervisor = async (req, res) => {
         { new: true }
       );
       res.json(team);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  };
+
+  // Delete team
+exports.deleteTeam = async (req, res) => {
+    try {
+      await Team.findByIdAndDelete(req.params.teamId);
+      res.json({ message: 'Team deleted successfully' });
     } catch (error) {
       res.status(400).json({ message: error.message });
     }

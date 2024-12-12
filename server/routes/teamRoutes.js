@@ -6,7 +6,8 @@ const {
     getOrganizationTeams, 
     updateSupervisor, 
     addMember, 
-    removeMember 
+    removeMember,
+    deleteTeam
 } = require('../controllers/teamController');
 
 router.use(protect);
@@ -17,5 +18,7 @@ router.get('/organization/:organizationId', getOrganizationTeams);
 router.put('/:teamId/supervisor', updateSupervisor);
 router.put('/:teamId/members/add', addMember);
 router.put('/:teamId/members/remove', removeMember);
+
+router.delete('/:teamId', deleteTeam);
 
 module.exports = router;
