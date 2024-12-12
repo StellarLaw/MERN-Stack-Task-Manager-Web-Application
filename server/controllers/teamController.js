@@ -38,8 +38,8 @@ exports.createTeam = async (req, res) => {
 exports.getOrganizationTeams = async (req, res) => {
     try {
       const teams = await Team.find({ organization: req.params.organizationId })
-        .populate('supervisor', 'firstName lastName')
-        .populate('members', 'firstName lastName')
+        .populate('supervisor', 'firstName lastName email')
+        .populate('members', 'firstName lastName email')
         .populate('createdBy', 'firstName lastName');
   
       res.json(teams);
@@ -99,6 +99,31 @@ exports.deleteTeam = async (req, res) => {
     try {
       await Team.findByIdAndDelete(req.params.teamId);
       res.json({ message: 'Team deleted successfully' });
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  };
+
+  exports.updateSupervisor = async (req, res) => {
+    try {
+      const { supervisorId } = req.body;
+      
+      // Verify the supervisor is a member of the team
+      const team = await Team.findById(req.params.teamId);
+      if (supervisorId && !team.members.includes(supervisorId)) {
+        return res.status(400).json({ message: 'Supervisor must be a team member' });
+      }
+  
+      const updatedTeam = await Team.findByIdAndUpdate(
+        req.params.teamId,
+        { supervisor: supervisorId },
+        { new: true }
+      )
+      .populate('supervisor', 'firstName lastName email')
+      .populate('members', 'firstName lastName email')
+      .populate('createdBy', 'firstName lastName');
+  
+      res.json(updatedTeam);
     } catch (error) {
       res.status(400).json({ message: error.message });
     }

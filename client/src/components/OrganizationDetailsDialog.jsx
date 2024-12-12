@@ -18,6 +18,10 @@ import {
   DialogActions,
   DialogContent as SubDialogContent,
   DialogTitle as SubDialogTitle,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -90,6 +94,11 @@ const OrganizationDetailsDialog = ({
         }
       );
       setTeams(response.data);
+      // If a team is selected, update its details too
+      if (selectedTeamDetails) {
+        const updatedTeam = response.data.find(team => team._id === selectedTeamDetails._id);
+        setSelectedTeamDetails(updatedTeam);
+      }
     } catch (error) {
       console.error('Error fetching teams:', error);
     }
@@ -152,6 +161,24 @@ const OrganizationDetailsDialog = ({
       // This should be handled by your parent component
     } catch (error) {
       console.error('Error removing member:', error);
+    }
+  };
+
+  const handleSupervisorChange = async (userId) => {
+    try {
+      const response = await axios.put(
+        `http://localhost:5001/api/teams/${selectedTeamDetails._id}/supervisor`,
+        { supervisorId: userId || null },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }
+      );
+      
+      // Update both teams and selectedTeamDetails
+      fetchTeams();
+      setSelectedTeamDetails(response.data); // Update the selected team details with new data
+    } catch (error) {
+      console.error('Error updating supervisor:', error);
     }
   };
 
@@ -374,12 +401,30 @@ const OrganizationDetailsDialog = ({
         <DialogContent>
             <Box sx={{ mb: 3 }}>
             <Typography variant="h6" gutterBottom>Supervisor</Typography>
-            <Typography>
+            {isAdmin ? (
+                <FormControl fullWidth>
+                <Select
+                    value={selectedTeamDetails?.supervisor?._id || ''}
+                    onChange={(e) => handleSupervisorChange(e.target.value)}
+                >
+                    <MenuItem value="">
+                    <em>None</em>
+                    </MenuItem>
+                    {selectedTeamDetails?.members?.map((member) => (
+                    <MenuItem key={member._id} value={member._id}>
+                        {member.firstName} {member.lastName}
+                    </MenuItem>
+                    ))}
+                </Select>
+                </FormControl>
+            ) : (
+                <Typography>
                 {selectedTeamDetails?.supervisor ? 
-                `${selectedTeamDetails.supervisor.firstName} ${selectedTeamDetails.supervisor.lastName}` : 
-                'No supervisor assigned'
+                    `${selectedTeamDetails.supervisor.firstName} ${selectedTeamDetails.supervisor.lastName}` : 
+                    'No supervisor assigned'
                 }
-            </Typography>
+                </Typography>
+            )}
             </Box>
 
             <Box>
@@ -390,6 +435,7 @@ const OrganizationDetailsDialog = ({
                     <ListItem key={member._id}>
                     <ListItemText 
                         primary={`${member.firstName} ${member.lastName}`}
+                        secondary={member._id === selectedTeamDetails?.supervisor?._id ? 'Supervisor' : 'Member'}
                     />
                     </ListItem>
                 ))
