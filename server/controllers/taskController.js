@@ -3,7 +3,16 @@ const Task = require('../models/Task');
 // Get all tasks for a user
 exports.getTasks = async (req, res) => {
   try {
-    const tasks = await Task.find({ createdBy: req.user._id });
+    // Find tasks where user is either the creator or the assignee
+    const tasks = await Task.find({
+      $or: [
+        { createdBy: req.user._id },
+        { assignedTo: req.user._id }
+      ]
+    })
+    .populate('assignedTo', 'firstName lastName')
+    .populate('teamId', 'name');
+
     res.json(tasks);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -18,7 +27,12 @@ exports.createTask = async (req, res) => {
       createdBy: req.user._id
     });
     await task.save();
-    res.status(201).json(task);
+    
+    const populatedTask = await Task.findById(task._id)
+      .populate('assignedTo', 'firstName lastName')
+      .populate('teamId', 'name');
+
+    res.status(201).json(populatedTask);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }

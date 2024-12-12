@@ -128,3 +128,15 @@ exports.deleteTeam = async (req, res) => {
       res.status(400).json({ message: error.message });
     }
   };
+
+  exports.getSupervisedTeams = async (req, res) => {
+    try {
+      const teams = await Team.find({ supervisor: req.user._id })
+        .populate('members', 'firstName lastName email')
+        .populate('supervisor', 'firstName lastName');
+        
+      res.json(teams);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  };

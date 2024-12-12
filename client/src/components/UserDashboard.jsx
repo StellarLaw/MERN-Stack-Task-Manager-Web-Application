@@ -129,22 +129,17 @@ const UserDashboard = () => {
     }
 
     const fetchTasks = async () => {
-        try {
-            const response = await axios.get(
-                'http://localhost:5001/api/tasks',
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                }
-            );
-            setTasks(response.data);
-        } catch (error) {
-            console.error('Error fetching tasks:', error);
-            if (error.response?.status === 401) {
-                navigate('/');
-            }
-        }
+      try {
+        const response = await axios.get(
+          'http://localhost:5001/api/tasks',
+          {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          }
+        );
+        setTasks(response.data);
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+      }
     };
 
     fetchTasks();
@@ -231,7 +226,6 @@ const UserDashboard = () => {
               onClose={handleClose}
             >
               <MenuItem onClick={handleClose}>Profile</MenuItem>
-              <MenuItem onClick={handleClose}>Settings</MenuItem>
               <MenuItem onClick={handleLogout}>Logout</MenuItem>
             </Menu>
           </div>
@@ -306,64 +300,70 @@ const UserDashboard = () => {
                   {sortedTasks.map((task) => (
                   <React.Fragment key={task._id}>
                     <ListItem 
-                      sx={{ 
-                        flexDirection: 'column', 
-                        alignItems: 'flex-start',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <Box sx={{ 
-                        width: '100%', 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center' 
-                      }}>
-                        <Box 
-                          onClick={() => handleTaskClick(task._id)}
-                          sx={{ flex: 1, display: 'flex', alignItems: 'center' }}
-                        >
-                          <Checkbox
-                            checked={task.status === 'completed'}
-                            onChange={(e) => handleTaskComplete(task, e)}
-                            onClick={(e) => e.stopPropagation()}  // Add this line
-                            sx={{ mr: 1 }}
-                          />
-                          <ListItemText
-                            primary={
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Typography
-                                  sx={{
-                                    textDecoration: task.status === 'completed' ? 'line-through' : 'none',
-                                    color: task.status === 'completed' ? 'text.secondary' : 'text.primary'
-                                  }}
-                                >
-                                  {task.title}
+                    key={task._id}
+                    sx={{ 
+                      flexDirection: 'column', 
+                      alignItems: 'flex-start',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Box sx={{ 
+                      width: '100%', 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center' 
+                    }}>
+                      <Box 
+                        onClick={() => handleTaskClick(task._id)}
+                        sx={{ flex: 1, display: 'flex', alignItems: 'center' }}
+                      >
+                        <Checkbox
+                          checked={task.status === 'completed'}
+                          onChange={(e) => handleTaskComplete(task._id, e)}
+                          onClick={(e) => e.stopPropagation()}
+                          sx={{ mr: 1 }}
+                        />
+                        <ListItemText
+                          primary={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Typography
+                                sx={{
+                                  textDecoration: task.status === 'completed' ? 'line-through' : 'none',
+                                  color: task.status === 'completed' ? 'text.secondary' : 'text.primary'
+                                }}
+                              >
+                                {task.title}
+                              </Typography>
+                              {isOverdue(task.dueDate) && task.status !== 'completed' && (
+                                <Chip size="small" label="OVERDUE" color="error" />
+                              )}
+                            </Box>
+                          }
+                          secondary={
+                            <React.Fragment>
+                              <Typography component="span" variant="body2" 
+                                color={isOverdue(task.dueDate) && task.status !== 'completed' ? "error" : "textPrimary"}
+                              >
+                                Due: {task.dueDate}
+                              </Typography>
+                              {` • Status: ${task.status}`}
+                              {` • Priority: `}
+                              <Chip 
+                                size="small" 
+                                label={task.priority}
+                                color={
+                                  task.priority === 'high' ? 'error' : 
+                                  task.priority === 'medium' ? 'warning' : 
+                                  'success'
+                                }
+                                sx={{ ml: 1 }}
+                              />
+                              {task.assignedTo && (
+                                <Typography component="div" variant="body2" sx={{ mt: 1 }}>
+                                  Assigned to: {task.assignedTo.firstName} {task.assignedTo.lastName}
                                 </Typography>
-                                {isOverdue(task.dueDate) && task.status !== 'completed' && (
-                                  <Chip size="small" label="OVERDUE" color="error" />
-                                )}
-                              </Box>
-                            }
-                            secondary={
-                              <React.Fragment>
-                                <Typography component="span" variant="body2" 
-                                  color={isOverdue(task.dueDate) && task.status !== 'completed' ? "error" : "textPrimary"}
-                                >
-                                  Due: {new Date(task.dueDate).toLocaleDateString()} {}
-                                </Typography>
-                                {` • Status: ${task.status}`}
-                                {` • Priority: `}
-                                <Chip 
-                                  size="small" 
-                                  label={task.priority}
-                                  color={
-                                    task.priority === 'high' ? 'error' : 
-                                    task.priority === 'medium' ? 'warning' : 
-                                    'success'
-                                  }
-                                  sx={{ ml: 1 }}
-                                />
-                              </React.Fragment>
+                              )}
+                            </React.Fragment>
                             }
                           />
                           <IconButton size="small" onClick={() => handleTaskClick(task._id)}>
@@ -427,14 +427,6 @@ const UserDashboard = () => {
                   onClick={() => navigate("/organizations")}
                 >
                   Organizations
-                </Button>
-                <Button
-                  variant="contained"
-                  startIcon={<TeamIcon />}
-                  fullWidth
-                  sx={{ mb: 2 }}
-                >
-                  View Team
                 </Button>
                 <Button
                   variant="outlined"

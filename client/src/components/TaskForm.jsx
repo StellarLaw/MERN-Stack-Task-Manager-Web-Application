@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import {
   Dialog,
   DialogTitle,
@@ -22,6 +23,11 @@ const TaskForm = ({ open, handleClose, handleSubmit, task = null }) => {
     priority: 'medium',
     status: 'pending'
   });
+  const [dateError, setDateError] = useState('');
+  const [supervisedTeams, setSupervisedTeams] = useState([]);
+  const [selectedTeam, setSelectedTeam] = useState('');
+  const [selectedMember, setSelectedMember] = useState('');
+  const [isSupervisor, setIsSupervisor] = useState(false);
 
   useEffect(() => {
     if (task) {
@@ -37,7 +43,21 @@ const TaskForm = ({ open, handleClose, handleSubmit, task = null }) => {
     }
   }, [task]);
 
-  const [dateError, setDateError] = useState('');
+  useEffect(() => {
+    const fetchSupervisedTeams = async () => {
+      try {
+        const response = await axios.get('http://localhost:5001/api/teams/supervised', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        setSupervisedTeams(response.data);
+        setIsSupervisor(response.data.length > 0);
+      } catch (error) {
+        console.error('Error fetching supervised teams:', error);
+      }
+    };
+
+    fetchSupervisedTeams();
+  }, []);
 
   const getTodayString = () => {
     const today = new Date();
@@ -60,7 +80,11 @@ const TaskForm = ({ open, handleClose, handleSubmit, task = null }) => {
     if (!validateDate(taskData.dueDate)) {
       return;
     }
-    handleSubmit(taskData);
+    handleSubmit({
+      ...taskData,
+      assignedTo: selectedMember || null,
+      teamId: selectedTeam || null
+    });
     setTaskData({
       title: '',
       description: '',
@@ -68,8 +92,8 @@ const TaskForm = ({ open, handleClose, handleSubmit, task = null }) => {
       priority: 'medium',
       status: 'pending'
     });
-    setDateError('');
-    handleClose();
+    setSelectedTeam('');
+    setSelectedMember('');
   };
 
   return (
@@ -139,11 +163,52 @@ const TaskForm = ({ open, handleClose, handleSubmit, task = null }) => {
                 <MenuItem value="completed">Completed</MenuItem>
               </Select>
             </FormControl>
+
+            {isSupervisor && (
+              <>
+                <FormControl fullWidth>
+                  <InputLabel>Assign to Team</InputLabel>
+                  <Select
+                    value={selectedTeam}
+                    label="Assign to Team"
+                    onChange={(e) => {
+                      setSelectedTeam(e.target.value);
+                      setSelectedMember('');
+                    }}
+                  >
+                    {supervisedTeams.map((team) => (
+                      <MenuItem key={team._id} value={team._id}>
+                        {team.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                {selectedTeam && (
+                  <FormControl fullWidth>
+                    <InputLabel>Assign to Member</InputLabel>
+                    <Select
+                      value={selectedMember}
+                      label="Assign to Member"
+                      onChange={(e) => setSelectedMember(e.target.value)}
+                    >
+                      {supervisedTeams
+                        .find(team => team._id === selectedTeam)
+                        ?.members.map((member) => (
+                          <MenuItem key={member._id} value={member._id}>
+                            {member.firstName} {member.lastName}
+                          </MenuItem>
+                        ))}
+                    </Select>
+                  </FormControl>
+                )}
+              </>
+            )}
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancel</Button>
-          <Button type="submit" variant="contained">
+          <Button type="submit" variant="contained" disabled={!!dateError}>
             {task ? 'Update Task' : 'Create Task'}
           </Button>
         </DialogActions>
