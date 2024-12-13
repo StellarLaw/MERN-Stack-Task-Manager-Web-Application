@@ -1,4 +1,5 @@
 const Team = require('../models/Team');
+const User = require('../models/User');
 const Organization = require('../models/Organization');
 
 // Create team
@@ -47,21 +48,6 @@ exports.getOrganizationTeams = async (req, res) => {
       res.status(500).json({ message: error.message });
     }
   };
-
-// Add supervisor to team
-exports.updateSupervisor = async (req, res) => {
-    try {
-      const { supervisorId } = req.body;
-      const team = await Team.findByIdAndUpdate(
-        req.params.teamId,
-        { supervisor: supervisorId },
-        { new: true }
-      );
-      res.json(team);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
-    }
-  };
   
   // Add member to team
   exports.addMember = async (req, res) => {
@@ -107,24 +93,41 @@ exports.deleteTeam = async (req, res) => {
   exports.updateSupervisor = async (req, res) => {
     try {
       const { supervisorId } = req.body;
-      
-      // Verify the supervisor is a member of the team
-      const team = await Team.findById(req.params.teamId);
+  
+      // Verify team exists
+      const team = await Team.findById(req.params.teamId).populate('supervisor');
+      if (!team) {
+        return res.status(404).json({ message: 'Team not found' });
+      }
+  
+      // Verify the new supervisor is a team member
       if (supervisorId && !team.members.includes(supervisorId)) {
         return res.status(400).json({ message: 'Supervisor must be a team member' });
       }
   
+      // If there is a previous supervisor, reset their flag
+      if (team.supervisor && team.supervisor._id.toString() !== supervisorId) {
+        await User.findByIdAndUpdate(team.supervisor._id, { isSupervisor: false });
+      }
+  
+      // Update the new supervisor's flag
+      if (supervisorId) {
+        await User.findByIdAndUpdate(supervisorId, { isSupervisor: true });
+      }
+  
+      // Update the team with the new supervisor
       const updatedTeam = await Team.findByIdAndUpdate(
         req.params.teamId,
-        { supervisor: supervisorId },
+        { supervisor: supervisorId || null },
         { new: true }
       )
-      .populate('supervisor', 'firstName lastName email')
-      .populate('members', 'firstName lastName email')
-      .populate('createdBy', 'firstName lastName');
+        .populate('supervisor', 'firstName lastName email')
+        .populate('members', 'firstName lastName email')
+        .populate('createdBy', 'firstName lastName');
   
       res.json(updatedTeam);
     } catch (error) {
+      console.error('Error updating supervisor:', error);
       res.status(400).json({ message: error.message });
     }
   };

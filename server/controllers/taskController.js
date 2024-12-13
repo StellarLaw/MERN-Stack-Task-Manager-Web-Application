@@ -10,10 +10,8 @@ exports.getTasks = async (req, res) => {
         { assignedTo: req.user._id }
       ]
     })
-    .populate({
-      path: 'assignedTo',
-      select: 'firstName lastName'  // Make sure these fields exist
-    });
+    .populate('assignedTo', 'firstName lastName') // For member name
+    .populate('createdBy', 'firstName lastName'); // For supervisor name
 
     res.json(tasks);
   } catch (error) {
@@ -24,13 +22,18 @@ exports.getTasks = async (req, res) => {
 // Create a new task
 exports.createTask = async (req, res) => {
   try {
-    const task = new Task({
+    const taskData = {
       ...req.body,
-      createdBy: req.user._id
-    });
+      createdBy: req.user._id,
+    };
+
+    if (taskData.dueDate) {
+      taskData.dueDate = new Date(taskData.dueDate).toISOString().split('T')[0];
+    }
+
+    const task = new Task(taskData);
     await task.save();
-    
-    // Fetch the newly created task with populated fields
+
     const populatedTask = await Task.findById(task._id)
       .populate('assignedTo', 'firstName lastName')
       .populate('teamId', 'name');

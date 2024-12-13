@@ -69,9 +69,13 @@ const UserDashboard = () => {
 
   const isOverdue = (dueDate) => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return new Date(dueDate) < today;
-};
+    const due = new Date(dueDate);
+  
+    const todayDate = today.toISOString().split('T')[0];
+    const dueDateOnly = due.toISOString().split('T')[0];
+  
+    return dueDateOnly < todayDate;
+  };
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -385,7 +389,7 @@ const UserDashboard = () => {
                               <Typography component="span" variant="body2" 
                                 color={isOverdue(task.dueDate) && task.status !== 'completed' ? "error" : "textPrimary"}
                               >
-                                Due: {task.dueDate}
+                                Due: {new Date(task.dueDate).toISOString().split('T')[0]}
                               </Typography>
                               {` • Status: ${task.status}`}
                               {` • Priority: `}
@@ -405,8 +409,8 @@ const UserDashboard = () => {
                                 </Typography>
                               )}
                             </React.Fragment>
-                            }
-                          />
+                          }
+                        />
                           <IconButton size="small" onClick={() => handleTaskClick(task._id)}>
                             {expandedTask === task._id ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                           </IconButton>

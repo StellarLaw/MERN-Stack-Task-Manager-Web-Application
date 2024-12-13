@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, 'Password is required'],
-    select: false // Won't be returned in queries
+    select: false
   },
   firstName: {
     type: String,
@@ -58,10 +58,13 @@ userSchema.pre('save', async function(next) {
 
 userSchema.methods.comparePassword = async function(candidatePassword) {
   try {
-    // Since password field has select: false, we need to explicitly select it
-    const user = await this.constructor.findById(this._id).select('+password');
-    return await bcrypt.compare(candidatePassword, user.password);
+    if (!this.password) {
+      const user = await this.constructor.findById(this._id).select('+password');
+      return await bcrypt.compare(candidatePassword, user.password);
+    }
+    return await bcrypt.compare(candidatePassword, this.password);
   } catch (error) {
+    console.error('Error in comparePassword:', error);
     throw error;
   }
 };

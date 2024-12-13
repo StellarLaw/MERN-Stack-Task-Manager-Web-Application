@@ -65,25 +65,35 @@ const deleteUser = async (req, res) => {
 };
 
 const changePassword = async (req, res) => {
-  console.log('Starting changePassword controller');
   try {
     const { currentPassword, newPassword } = req.body;
-    console.log('User ID:', req.user._id);
 
-    const user = await User.findById(req.user._id);
+    // Find user with password field
+    const user = await User.findById(req.user._id).select('+password');
+
     if (!user) {
+      console.log('User not found');
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Use the comparePassword method we just added
-    const isMatch = await user.comparePassword(currentPassword);
+    // Check if passwords were provided
+    if (!currentPassword || !newPassword) {
+      console.log('Missing password data');
+      return res.status(400).json({ 
+        message: 'Both current password and new password are required' 
+      });
+    }
+
+    // Compare passwords
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+
     if (!isMatch) {
       return res.status(401).json({ message: 'Current password is incorrect' });
     }
 
+    // Update password
     user.password = newPassword;
     await user.save();
-    console.log('Password updated successfully');
 
     res.json({ message: 'Password updated successfully' });
   } catch (error) {

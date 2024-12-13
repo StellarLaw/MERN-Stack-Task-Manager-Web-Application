@@ -31,15 +31,22 @@ const TaskForm = ({ open, handleClose, handleSubmit, task = null }) => {
 
   useEffect(() => {
     if (task) {
-      setTaskData(task);
+      setTaskData({
+        ...task,
+        dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
+      });
+      setSelectedTeam(task.teamId || '');
+      setSelectedMember(task.assignedTo?._id || '');
     } else {
       setTaskData({
         title: '',
         description: '',
         dueDate: '',
         priority: 'medium',
-        status: 'pending'
+        status: 'pending',
       });
+      setSelectedTeam('');
+      setSelectedMember('');
     }
   }, [task]);
 
@@ -77,24 +84,29 @@ const TaskForm = ({ open, handleClose, handleSubmit, task = null }) => {
 
   const onSubmit = (e) => {
     e.preventDefault();
+  
     if (!validateDate(taskData.dueDate)) {
       return;
     }
+  
     handleSubmit({
       ...taskData,
+      dueDate: taskData.dueDate,
       assignedTo: selectedMember || null,
-      teamId: selectedTeam || null
+      teamId: selectedTeam || null,
     });
+  
     setTaskData({
       title: '',
       description: '',
       dueDate: '',
       priority: 'medium',
-      status: 'pending'
+      status: 'pending',
     });
     setSelectedTeam('');
     setSelectedMember('');
   };
+  
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -186,21 +198,19 @@ const TaskForm = ({ open, handleClose, handleSubmit, task = null }) => {
 
                 {selectedTeam && (
                   <FormControl fullWidth>
-                    <InputLabel>Assign to Member</InputLabel>
-                    <Select
-                      value={selectedMember}
-                      label="Assign to Member"
-                      onChange={(e) => setSelectedMember(e.target.value)}
-                    >
-                      {supervisedTeams
-                        .find(team => team._id === selectedTeam)
-                        ?.members.map((member) => (
-                          <MenuItem key={member._id} value={member._id}>
-                            {member.firstName} {member.lastName}
-                          </MenuItem>
-                        ))}
-                    </Select>
-                  </FormControl>
+                  <InputLabel>Assign to Member</InputLabel>
+                  <Select
+                    value={selectedMember}
+                    onChange={(e) => setSelectedMember(e.target.value)}
+                    label="Assign to Member"
+                  >
+                    {supervisedTeams.find(team => team._id === selectedTeam)?.members.map(member => (
+                      <MenuItem key={member._id} value={member._id}>
+                        {member.firstName} {member.lastName}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
                 )}
               </>
             )}

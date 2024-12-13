@@ -55,37 +55,49 @@ const ProfileView = () => {
   };
 
   const handleChangePassword = async () => {
-  if (passwordData.newPassword !== passwordData.confirmPassword) {
-    setError('New passwords do not match');
-    return;
-  }
-
-  try {
-    console.log('Initiating password change');
-    const response = await axios.put(
-      'http://localhost:5001/api/users/change-password',
-      {
-        currentPassword: passwordData.currentPassword,
-        newPassword: passwordData.newPassword,
-      },
-      {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+    try {     
+      if (passwordData.newPassword !== passwordData.confirmPassword) {
+        setError('New passwords do not match');
+        return;
       }
-    );
-    console.log('Password change response:', response.data);
-
-    setChangePasswordDialog(false);
-    setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-    });
-    setError('');
-  } catch (error) {
-    console.error('Error in handleChangePassword:', error.response || error.message);
-    setError(error.response?.data?.message || 'Failed to change password');
-  }
-};
+  
+      if (!passwordData.currentPassword || !passwordData.newPassword) {
+        setError('Both current and new passwords are required');
+        return;
+      }
+  
+      const token = localStorage.getItem('token');
+  
+      const response = await axios.put(
+        'http://localhost:5001/api/users/change-password',
+        {
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+        },
+        {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+        }
+      );
+  
+      setChangePasswordDialog(false);
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+      setError('');
+    } catch (error) {
+      console.error('Password change error:', {
+        status: error.response?.status,
+        message: error.response?.data?.message,
+        data: error.response?.data
+      });
+      setError(error.response?.data?.message || 'Failed to change password');
+    }
+  };
 
   return (
     <Box sx={{ flexGrow: 1 }}>

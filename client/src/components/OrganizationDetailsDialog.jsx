@@ -168,7 +168,7 @@ const OrganizationDetailsDialog = ({
     try {
       const response = await axios.put(
         `http://localhost:5001/api/teams/${selectedTeamDetails._id}/supervisor`,
-        { supervisorId: userId || null },
+        { supervisorId: userId || null },  // Make sure to handle null case
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         }
