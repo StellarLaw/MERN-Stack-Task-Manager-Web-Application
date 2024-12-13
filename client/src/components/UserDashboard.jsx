@@ -55,6 +55,8 @@ const UserDashboard = () => {
     const savedUser = localStorage.getItem('user');
     return savedUser ? JSON.parse(savedUser) : { firstName: '', lastName: '', email: '' };
   });
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [taskToComplete, setTaskToComplete] = useState(null);
 
   const [expandedTask, setExpandedTask] = useState(null);
 
@@ -87,37 +89,21 @@ const UserDashboard = () => {
 
   const handleTaskSubmit = async (taskData) => {
     try {
-      if (taskToEdit) {
-        // Update existing task
-        const response = await axios.put(
-          `http://localhost:5001/api/tasks/${taskToEdit._id}`, 
-          taskData,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`
-            }
+      const response = await axios.post(
+        'http://localhost:5001/api/tasks',
+        taskData,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
           }
-        );
-        setTasks(tasks.map(task => 
-          task._id === taskToEdit._id ? response.data : task
-        ));
-      } else {
-        // Create new task
-        const response = await axios.post(
-          'http://localhost:5001/api/tasks', 
-          taskData,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`
-            }
-          }
-        );
-        setTasks([...tasks, response.data]);
-      }
-      setTaskToEdit(null);
+        }
+      );
+      
+      // Add the new task to the state with populated data
+      setTasks(prevTasks => [...prevTasks, response.data]);
       setIsTaskFormOpen(false);
     } catch (error) {
-      console.error('Error handling task:', error);
+      console.error('Error creating task:', error);
     }
   };
 
@@ -147,15 +133,6 @@ const UserDashboard = () => {
 
   const handleTaskClick = (taskId) => {
     setExpandedTask(expandedTask === taskId ? null : taskId);
-  };
-  
-  const handleTaskComplete = (taskId, e) => {
-    e.stopPropagation();
-    setTasks(tasks.map(task => 
-      task._id === taskId._id 
-        ? { ...task, status: task.status === 'completed' ? 'pending' : 'completed' }
-        : task
-    ));
   };
   
   const openDeleteDialog = (task, e) => {
@@ -204,6 +181,64 @@ const UserDashboard = () => {
         return 0;
     }
   });
+
+  const handleTaskStatusChange = async (task, e) => {
+    e.stopPropagation();
+  
+    // If task is assigned and user is the assignee
+    if (task.assignedTo?._id === user.id) {
+      // If trying to uncheck, don't allow it
+      if (task.status === 'completed') {
+        return;
+      }
+      // If trying to check, show confirmation
+      setTaskToComplete(task);
+      setConfirmDialogOpen(true);
+      return;
+    }
+  
+    // For non-assigned tasks or if user is supervisor
+    try {
+      const newStatus = task.status === 'completed' ? 'pending' : 'completed';
+      const response = await axios.put(
+        `http://localhost:5001/api/tasks/${task._id}/status`,
+        { status: newStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+  
+      setTasks(tasks.map(t => 
+        t._id === task._id ? response.data : t
+      ));
+    } catch (error) {
+      console.error('Error updating task status:', error);
+    }
+  };
+  
+  const handleConfirmComplete = async () => {
+    try {
+      const response = await axios.put(
+        `http://localhost:5001/api/tasks/${taskToComplete._id}/status`,
+        { status: 'completed' },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+  
+      setTasks(tasks.map(t => 
+        t._id === taskToComplete._id ? response.data : t
+      ));
+      setConfirmDialogOpen(false);
+      setTaskToComplete(null);
+    } catch (error) {
+      console.error('Error completing task:', error);
+    }
+  };
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -319,8 +354,9 @@ const UserDashboard = () => {
                       >
                         <Checkbox
                           checked={task.status === 'completed'}
-                          onChange={(e) => handleTaskComplete(task._id, e)}
+                          onChange={(e) => handleTaskStatusChange(task, e)}  // Pass the whole task object
                           onClick={(e) => e.stopPropagation()}
+                          disabled={task.assignedTo?._id === user.id && task.status === 'completed'}
                           sx={{ mr: 1 }}
                         />
                         <ListItemText
@@ -475,6 +511,31 @@ const UserDashboard = () => {
             variant="contained"
           >
             Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={confirmDialogOpen}
+        onClose={() => {
+          setConfirmDialogOpen(false);
+          setTaskToComplete(null);
+        }}
+      >
+        <DialogTitle>Complete Task</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to mark this task as complete? 
+            This action cannot be undone by you - only your supervisor can change it back.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => {
+            setConfirmDialogOpen(false);
+            setTaskToComplete(null);
+          }}>Cancel</Button>
+          <Button onClick={handleConfirmComplete} variant="contained">
+            Complete Task
           </Button>
         </DialogActions>
       </Dialog>

@@ -1,7 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth');
-const { getTasks, createTask, updateTask, deleteTask } = require('../controllers/taskController');
+const {
+    getTasks,
+    createTask,
+    updateTask,
+    deleteTask,
+    updateTaskStatus
+ } = require('../controllers/taskController');
 
 // All task routes will require authentication
 router.use(protect);
@@ -13,5 +19,7 @@ router.route('/')
 router.route('/:id')
     .put(updateTask)
     .delete(deleteTask);
+
+router.put('/:taskId/status', updateTaskStatus);
 
 module.exports = router;
