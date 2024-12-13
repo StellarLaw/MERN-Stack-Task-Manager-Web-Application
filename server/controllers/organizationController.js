@@ -1,5 +1,5 @@
 const Organization = require('../models/Organization');
-const Invitation = require('../models/Invitation');
+const Invitation = require('../models/invitation');
 const User = require('../models/User');
 
 // Create organization

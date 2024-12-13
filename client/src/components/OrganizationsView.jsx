@@ -188,8 +188,12 @@ const handleLogout = () => {
             open={Boolean(anchorEl)}
             onClose={handleClose}
           >
-            <MenuItem onClick={handleClose}>Profile</MenuItem>
-            <MenuItem onClick={handleClose}>Settings</MenuItem>
+            <MenuItem onClick={() => {
+              handleClose();
+              navigate('/profile');
+            }}>
+              Profile
+            </MenuItem>
             <MenuItem onClick={handleLogout}>Logout</MenuItem>
           </Menu>
         </div>
@@ -251,10 +255,10 @@ const handleLogout = () => {
               <Card key={invitation._id} sx={{ mb: 2 }}>
                 <CardContent>
                   <Typography variant="subtitle1">
-                    {invitation.organization.name}  // Changed from organizationId to organization
+                    {invitation.organization.name}
                   </Typography>
                   <Typography color="textSecondary" gutterBottom>
-                    Invited by: {invitation.from.email}  // Changed from invitedBy to from
+                    Invited by: {invitation.from.firstName} {invitation.from.lastName} ({invitation.from.email})
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 1 }}>
                     <Button

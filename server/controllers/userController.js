@@ -1,6 +1,5 @@
-// server/controllers/userController.js
-
 const User = require('../models/User');
+const bcrypt = require('bcryptjs');
 
 // Create a new user
 const createUser = async (req, res) => {
@@ -65,10 +64,39 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const changePassword = async (req, res) => {
+  console.log('Starting changePassword controller');
+  try {
+    const { currentPassword, newPassword } = req.body;
+    console.log('User ID:', req.user._id);
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Use the comparePassword method we just added
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Current password is incorrect' });
+    }
+
+    user.password = newPassword;
+    await user.save();
+    console.log('Password updated successfully');
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Error in changePassword:', error);
+    res.status(400).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createUser,
   getAllUsers,
   getUserById,
   updateUser,
-  deleteUser
+  deleteUser,
+  changePassword
 };

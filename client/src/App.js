@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import HomePage from './components/HomePage';
 import UserDashboard from './components/UserDashboard';
 import OrganizationsView from './components/OrganizationsView';
+import ProfileView from './components/ProfileView';
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -32,6 +33,15 @@ function App() {
           element={
             <ProtectedRoute>
               <OrganizationsView />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfileView />
             </ProtectedRoute>
           }
         />

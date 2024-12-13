@@ -56,5 +56,15 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  try {
+    // Since password field has select: false, we need to explicitly select it
+    const user = await this.constructor.findById(this._id).select('+password');
+    return await bcrypt.compare(candidatePassword, user.password);
+  } catch (error) {
+    throw error;
+  }
+};
+
 const User = mongoose.model('User', userSchema);
 module.exports = User;
