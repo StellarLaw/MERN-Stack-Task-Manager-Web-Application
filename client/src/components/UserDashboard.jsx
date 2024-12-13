@@ -202,7 +202,7 @@ const UserDashboard = () => {
         const priorityOrder = { high: 3, medium: 2, low: 1 };
         return priorityOrder[b.priority] - priorityOrder[a.priority];
       case 'status':
-        const statusOrder = { 'in-progress': 1, 'pending': 2, 'completed': 3 };
+        const statusOrder = { 'pending': 1, 'completed': 2 };
         return statusOrder[a.status] - statusOrder[b.status];
       case 'createdAt':
         return new Date(b.createdAt) - new Date(a.createdAt);

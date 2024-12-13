@@ -171,7 +171,6 @@ const TaskForm = ({ open, handleClose, handleSubmit, task = null }) => {
                 onChange={(e) => setTaskData({ ...taskData, status: e.target.value })}
               >
                 <MenuItem value="pending">Pending</MenuItem>
-                <MenuItem value="in-progress">In Progress</MenuItem>
                 <MenuItem value="completed">Completed</MenuItem>
               </Select>
             </FormControl>
