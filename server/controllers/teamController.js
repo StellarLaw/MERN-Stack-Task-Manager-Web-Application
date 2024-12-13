@@ -136,7 +136,8 @@ exports.deleteTeam = async (req, res) => {
     try {
       const teams = await Team.find({ supervisor: req.user._id })
         .populate('members', 'firstName lastName email')
-        .populate('supervisor', 'firstName lastName');
+        .populate('supervisor', 'firstName lastName')
+        .populate('organization', 'name');
         
       res.json(teams);
     } catch (error) {

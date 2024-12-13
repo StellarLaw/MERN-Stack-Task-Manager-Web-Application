@@ -12,7 +12,8 @@ import {
   Select,
   MenuItem,
   Stack,
-  Alert
+  Alert,
+  Typography
 } from '@mui/material';
 
 const TaskForm = ({ open, handleClose, handleSubmit, task = null }) => {
@@ -178,22 +179,22 @@ const TaskForm = ({ open, handleClose, handleSubmit, task = null }) => {
             {isSupervisor && (
               <>
                 <FormControl fullWidth>
-                  <InputLabel>Assign to Team</InputLabel>
-                  <Select
-                    value={selectedTeam}
-                    label="Assign to Team"
-                    onChange={(e) => {
-                      setSelectedTeam(e.target.value);
-                      setSelectedMember('');
-                    }}
-                  >
-                    {supervisedTeams.map((team) => (
-                      <MenuItem key={team._id} value={team._id}>
-                        {team.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <InputLabel>Assign to Team</InputLabel>
+                <Select
+                  value={selectedTeam}
+                  label="Assign to Team"
+                  onChange={(e) => {
+                    setSelectedTeam(e.target.value);
+                    setSelectedMember('');
+                  }}
+                >
+                  {supervisedTeams.map((team) => (
+                    <MenuItem key={team._id} value={team._id}>
+                      {team.name} <Typography component="span" color="text.secondary" sx={{ ml: 1 }}>({team.organization.name})</Typography>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
                 {selectedTeam && (
                   <FormControl fullWidth>
