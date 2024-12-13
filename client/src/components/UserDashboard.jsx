@@ -93,21 +93,46 @@ const UserDashboard = () => {
 
   const handleTaskSubmit = async (taskData) => {
     try {
-      const response = await axios.post(
-        'http://localhost:5001/api/tasks',
-        taskData,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        }
-      );
+      let response;
       
-      // Add the new task to the state with populated data
-      setTasks(prevTasks => [...prevTasks, response.data]);
+      if (taskToEdit) {
+        // Editing existing task
+        response = await axios.put(
+          `http://localhost:5001/api/tasks/${taskToEdit._id}`,
+          taskData,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          }
+        );
+        
+        // Update the task in the state
+        setTasks(prevTasks => 
+          prevTasks.map(task => 
+            task._id === taskToEdit._id ? response.data : task
+          )
+        );
+      } else {
+        // Creating new task
+        response = await axios.post(
+          'http://localhost:5001/api/tasks',
+          taskData,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          }
+        );
+        
+        // Add the new task to the state
+        setTasks(prevTasks => [...prevTasks, response.data]);
+      }
+      
       setIsTaskFormOpen(false);
+      setTaskToEdit(null);
     } catch (error) {
-      console.error('Error creating task:', error);
+      console.error('Error saving task:', error);
     }
   };
 
@@ -404,10 +429,16 @@ const UserDashboard = () => {
                                 sx={{ ml: 1 }}
                               />
                               {task.assignedTo && (
-                                <Typography component="div" variant="body2" sx={{ mt: 1 }}>
-                                  Assigned to: {task.assignedTo.firstName} {task.assignedTo.lastName}
-                                </Typography>
-                              )}
+                              <Typography component="div" variant="body2" sx={{ mt: 1 }}>
+                                {task.assignedTo._id === user.id ? (
+                                  // If current user is the assignee, show who assigned it
+                                  `Assigned by: ${task.assignedBy?.firstName || ''} ${task.assignedBy?.lastName || ''}`
+                                ) : (
+                                  // If current user is the supervisor/creator, show who it's assigned to
+                                  `Assigned to: ${task.assignedTo.firstName} ${task.assignedTo.lastName}`
+                                )}
+                              </Typography>
+                            )}
                             </React.Fragment>
                           }
                         />

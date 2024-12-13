@@ -41,6 +41,10 @@ const taskSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
+  assignedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
   teamId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Team'

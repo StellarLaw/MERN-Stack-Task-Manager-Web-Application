@@ -10,8 +10,9 @@ exports.getTasks = async (req, res) => {
         { assignedTo: req.user._id }
       ]
     })
-    .populate('assignedTo', 'firstName lastName') // For member name
-    .populate('createdBy', 'firstName lastName'); // For supervisor name
+    .populate('assignedTo', 'firstName lastName')
+    .populate('createdBy', 'firstName lastName')
+    .populate('assignedBy', 'firstName lastName'); // Add this line
 
     res.json(tasks);
   } catch (error) {
@@ -27,6 +28,11 @@ exports.createTask = async (req, res) => {
       createdBy: req.user._id,
     };
 
+    // If task is being assigned to someone, add assignedBy
+    if (taskData.assignedTo) {
+      taskData.assignedBy = req.user._id;
+    }
+
     if (taskData.dueDate) {
       taskData.dueDate = new Date(taskData.dueDate).toISOString().split('T')[0];
     }
@@ -36,7 +42,8 @@ exports.createTask = async (req, res) => {
 
     const populatedTask = await Task.findById(task._id)
       .populate('assignedTo', 'firstName lastName')
-      .populate('teamId', 'name');
+      .populate('teamId', 'name')
+      .populate('assignedBy', 'firstName lastName'); // Add this line
 
     res.status(201).json(populatedTask);
   } catch (error) {
@@ -59,7 +66,15 @@ exports.updateTask = async (req, res) => {
 
     Object.assign(task, req.body);
     await task.save();
-    res.json(task);
+
+    // Fetch the updated task with populated fields
+    const updatedTask = await Task.findById(task._id)
+      .populate('assignedTo', 'firstName lastName')
+      .populate('createdBy', 'firstName lastName')
+      .populate('assignedBy', 'firstName lastName')
+      .populate('teamId', 'name');
+
+    res.json(updatedTask);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
