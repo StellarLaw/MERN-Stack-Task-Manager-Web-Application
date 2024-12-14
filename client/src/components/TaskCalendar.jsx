@@ -20,7 +20,7 @@ const TaskCalendar = ({ tasks }) => {
   return (
     <Box sx={{ mt: 2 }}>
     <FullCalendar
-      key={tasks.length} // Ensure re-render when tasks array changes
+      key={tasks.length}
       plugins={[dayGridPlugin, interactionPlugin]}
       initialView="dayGridMonth"
       events={events}
