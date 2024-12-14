@@ -1,139 +1,141 @@
 # MERN Task Management Web Application
 
 ## Project Overview
-This Task Management Web Application is being developed using the MERN stack (MongoDB, Express, React, and Node.js). It is designed to help users and organizations manage tasks, collaborate within teams, and track deadlines efficiently. The app provides role-based permissions, allowing administrators to manage users, assign tasks, and set task priorities. It also features calendar integration to visualize deadlines and monitor progress.
+This Task Management Web Application is built using the MERN stack (MongoDB, Express, React, and Node.js). It enables organizations to manage tasks, create teams, assign supervisors, and track task progress efficiently. The application features a comprehensive role-based permission system, allowing organizations to manage members, teams, and tasks with different levels of access.
 
 ## Key Features
-- **User Registration and Authentication**: Secure login system using JWT authentication.
-- **Task Management**: Users can create, edit, and delete tasks.
-- **Role-Based Permissions**: Admins can assign tasks to team members, manage roles, and track progress.
-- **Calendar Integration**: View tasks and deadlines in a calendar format, with color-coded priorities.
-- **Organization Creation**: Users can create or join organizations to collaborate on tasks.
+- **User Authentication**: Secure login/signup system with JWT authentication
+- **Organization Management**: 
+  - Create and manage organizations
+  - Invite members via email
+  - Manage teams within organizations
+  - Assign team supervisors
+- **Task Management**:
+  - Create, edit, and delete tasks
+  - Assign tasks to team members
+  - Set priorities (high, medium, low)
+  - Track task status (pending, completed)
+  - View task deadlines and details
+- **Team Management**:
+  - Create teams within organizations
+  - Assign/remove team members
+  - Designate team supervisors
+- **Role-Based Permissions**:
+  - Organization Admin: Full control over organization, teams, and members
+  - Team Supervisor: Can assign and manage tasks for team members
+  - Team Member: Can view and complete assigned tasks
+- **Dashboard Views**:
+  - List view with sorting options (due date, priority, status)
+  - Calendar view for deadline visualization
+  - Task details with description expansion
 
 ## Technologies Used
-- **Frontend**: React.js
-- **Backend**: Node.js and Express.js
-- **Database**: MongoDB (hosted on MongoDB Atlas)
-- **Authentication**: JWT (JSON Web Tokens)
-- **Calendar Integration**: FullCalendar
+- **Frontend**: 
+  - React.js
+  - Material-UI for components
+  - FullCalendar for calendar view
+  - Axios for API requests
+- **Backend**: 
+  - Node.js and Express.js
+  - MongoDB for database
+  - JWT for authentication
+  - Bcrypt for password hashing
 
 ## Installation
 
-## Future Usage
-Once the server and frontend are running, you can:
-- Register or log in to your account.
-- Create personal tasks or manage tasks within an organization.
-- View tasks in a dashboard and calendar.
-- Mark tasks as complete or incomplete.
-- Admins can assign tasks to team members and monitor progress.
+### Prerequisites
+- Node.js
+- MongoDB
+- npm or yarn
 
-## Roadmap
-### Current Focus
-- **User authentication and task creation**: Implementing secure login and basic task management.
-  
-### Future Features
-- **Calendar integration**: Visualizing tasks and deadlines on a calendar.
-- **Role-based permissions**: Adding administrator roles for task delegation.
-- **Notifications**: Reminders for upcoming deadlines.
-
-Here’s the updated README excerpt with instructions for both the backend and client, along with the issue and resolution steps:
-
----
-
-## How to Download, Compile, and Run
-
-### **1. Clone the Repository**
-To get started, clone the project repository from GitHub:
-
-```bash
-git clone https://github.com/your-username/your-repo-name.git
-cd your-repo-name
-```
-
----
-
-### **2. Install Dependencies**
-
-#### **Backend**
-Navigate to the `server` directory and install the backend dependencies:
-
+### Backend Setup
+1. Navigate to the server directory:
 ```bash
 cd server
+```
+
+2. Install dependencies:
+```bash
 npm install
 ```
 
-#### **Client**
-Navigate to the `client` directory and install the frontend dependencies:
-
-```bash
-cd ../client
-npm install
+3. Create a .env file with:
+```
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+PORT=5001
 ```
 
----
-
-### **3. Start the Project**
-
-#### **Start the Backend**
-From the `server` directory, start the Node.js backend server:
-
+4. Start the server:
 ```bash
-cd server
 node server.js
 ```
 
-The backend server will start, typically at `http://localhost:5000` (or the port configured in your server code). Ensure the backend is running before starting the client.
-
-#### **Start the Client**
-From the `client` directory, start the React development server:
-
+### Frontend Setup
+1. Navigate to the client directory:
 ```bash
-cd ../client
+cd client
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Start the development server:
+```bash
 npm start
 ```
 
-The React application will launch in your default browser at `http://localhost:3000` (or another port if 3000 is in use).
+The application will be available at `http://localhost:3000`
 
----
+## Features in Detail
 
-### **Common Issue and Resolution**
+### Organization Management
+- Create new organizations
+- Invite members via email
+- Manage organization members
+- Create and manage teams within organizations
 
-**Issue:**  
-While attempting to start the client with `npm start`, you might encounter an error like:
+### Task Management
+- Create tasks with title, description, due date, and priority
+- Assign tasks to team members
+- Track task status
+- View tasks in list or calendar format
+- Sort tasks by various criteria
+- Mark tasks as completed
 
-```plaintext
-Error: Cannot find module './util'
-```
+### Team Management
+- Create teams within organizations
+- Add/remove team members
+- Assign team supervisors
+- Manage team tasks
 
-**Cause:**  
-This issue typically occurs due to a corrupted or incomplete `node_modules` installation.
+## User Roles and Permissions
 
-**Resolution:**  
-To resolve the issue:
-1. Navigate to the `client` directory.
-2. Remove the `node_modules` directory and `package-lock.json`:
-   ```bash
-   rm -rf node_modules package-lock.json
-   ```
-3. Reinstall the dependencies:
-   ```bash
-   npm install
-   ```
-4. Start the client again:
-   ```bash
-   npm start
-   ```
+### Organization Admin
+- Create and manage organizations
+- Create teams
+- Invite members
+- Assign supervisors
+- Manage all aspects of the organization
 
-This should fix the issue and allow the client to run as expected.
+### Team Supervisor
+- Assign tasks to team members
+- Monitor task progress
+- Change task status
+- View team performance
 
----
+### Team Member
+- View assigned tasks
+- Complete tasks
+- Update task status
+- View team information
 
-### **4. Notes**
-- **Environment Variables**: Both the server and client may require `.env` files for configuration (e.g., API base URLs, database credentials). Refer to the project documentation for details on setting these up.
-- **Build for Production**: To create a production build of the client:
-  ```bash
-  npm run build
-  ```
-  The build files will be created in the `client/build` directory, which can be served by the backend server or deployed separately.
-
---- 
+## Future Enhancements
+- Email notifications for task assignments and deadlines
+- Advanced reporting features
+- Task commenting system
+- File attachments for tasks
+- Mobile application
+- Performance analytics and dashboards
