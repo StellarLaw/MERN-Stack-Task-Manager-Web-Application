@@ -116,7 +116,7 @@ const handleLogout = () => {
     }
   };
 
-  const handleInviteUser = async ({ organizationId, email }) => {  // Update parameters
+  const handleInviteUser = async ({ organizationId, email }) => {  
     try {
       await axios.post(
         'http://localhost:5001/api/organizations/invitations',
