@@ -8,7 +8,7 @@ const {
     addMember, 
     removeMember,
     deleteTeam,
-    getSupervisedTeams  // Add this new function
+    getSupervisedTeams 
 } = require('../controllers/teamController');
 
 router.use(protect);
@@ -16,7 +16,7 @@ router.use(protect);
 // Base routes
 router.post('/', createTeam);
 router.get('/organization/:organizationId', getOrganizationTeams);
-router.get('/supervised', getSupervisedTeams);  // Change this line to use the imported function directly
+router.get('/supervised', getSupervisedTeams);  
 
 // Team member routes
 router.put('/:teamId/supervisor', updateSupervisor);
