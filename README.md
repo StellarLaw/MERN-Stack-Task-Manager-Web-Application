@@ -48,44 +48,26 @@ This Task Management Web Application is built using the MERN stack (MongoDB, Exp
 - MongoDB
 - npm or yarn
 
-### Backend Setup
-1. Navigate to the server directory:
-```bash
-cd server
-```
 
-2. Install dependencies:
+1. Install dependencies:
 ```bash
 npm install
 ```
 
-3. Create a .env file with:
+2. Create a .env file with:
 ```
 MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
 PORT=5001
 ```
 
-4. Start the server:
-```bash
-node server.js
-```
-
-### Frontend Setup
-1. Navigate to the client directory:
-```bash
-cd client
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Start the development server:
+3. Start the server:
 ```bash
 npm start
 ```
+This command will run a script that starts both the front-end and back-end servers.
+
+---
 
 The application will be available at `http://localhost:3000`
 
@@ -124,7 +106,7 @@ The application will be available at `http://localhost:3000`
 - Assign tasks to team members
 - Monitor task progress
 - Change task status
-- View team performance
+- View team information
 
 ### Team Member
 - View assigned tasks
@@ -134,8 +116,7 @@ The application will be available at `http://localhost:3000`
 
 ## Future Enhancements
 - Email notifications for task assignments and deadlines
-- Advanced reporting features
 - Task commenting system
 - File attachments for tasks
 - Mobile application
-- Performance analytics and dashboards
+
