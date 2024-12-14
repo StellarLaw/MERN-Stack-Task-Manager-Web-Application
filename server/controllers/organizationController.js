@@ -24,7 +24,7 @@ exports.getUserOrganizations = async (req, res) => {
       'members.user': req.user._id
     })
     .populate('owner', 'firstName lastName email')
-    .populate('members.user', 'firstName lastName email');  // Add this line
+    .populate('members.user', 'firstName lastName email');  
 
     res.json(organizations);
   } catch (error) {
