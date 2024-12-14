@@ -158,7 +158,6 @@ const OrganizationDetailsDialog = ({
         }
       );
       // Refresh organization data
-      // This should be handled by your parent component
     } catch (error) {
       console.error('Error removing member:', error);
     }
@@ -174,9 +173,8 @@ const OrganizationDetailsDialog = ({
         }
       );
       
-      // Update both teams and selectedTeamDetails
       fetchTeams();
-      setSelectedTeamDetails(response.data); // Update the selected team details with new data
+      setSelectedTeamDetails(response.data); 
     } catch (error) {
       console.error('Error updating supervisor:', error);
     }
