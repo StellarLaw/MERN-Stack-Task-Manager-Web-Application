@@ -46,7 +46,7 @@ This Task Management Web Application is built using the MERN stack (MongoDB, Exp
 ### Prerequisites
 - Node.js
 - MongoDB
-- npm or yarn
+- npm
 
 
 1. Install dependencies:
