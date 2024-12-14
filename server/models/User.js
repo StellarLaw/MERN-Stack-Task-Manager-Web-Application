@@ -41,7 +41,7 @@ const userSchema = new mongoose.Schema({
     ref: 'Organization'
   }
 }, {
-  timestamps: true // Adds createdAt and updatedAt
+  timestamps: true 
 });
 
 // Virtual for full name
