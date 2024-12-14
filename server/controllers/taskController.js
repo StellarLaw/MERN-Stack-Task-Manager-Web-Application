@@ -12,7 +12,7 @@ exports.getTasks = async (req, res) => {
     })
     .populate('assignedTo', 'firstName lastName')
     .populate('createdBy', 'firstName lastName')
-    .populate('assignedBy', 'firstName lastName'); // Add this line
+    .populate('assignedBy', 'firstName lastName'); 
 
     res.json(tasks);
   } catch (error) {
@@ -43,7 +43,7 @@ exports.createTask = async (req, res) => {
     const populatedTask = await Task.findById(task._id)
       .populate('assignedTo', 'firstName lastName')
       .populate('teamId', 'name')
-      .populate('assignedBy', 'firstName lastName'); // Add this line
+      .populate('assignedBy', 'firstName lastName');
 
     res.status(201).json(populatedTask);
   } catch (error) {
